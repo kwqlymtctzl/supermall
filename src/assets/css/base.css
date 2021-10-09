@@ -1,0 +1,60 @@
+@import "./normalize.css";
+
+/*:root -> 伪类，获取根元素html*/
+:root {
+  --color-text: #666;
+  --color-high-text: #ff5777;
+  /* 高亮颜色 */
+  --color-tint: #ff8198;
+  /* tintColor设置导航背景颜色 */
+  --color-background: #fff;
+  --font-size: 14px;
+  --line-height: 1.5;
+}
+/* 这里相当于定义变量的写法，以后在别的属性要用到这个属性值时，可以直接拿变量名作为属性值。没什么用 */
+
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Helvetica Neue",Helvetica,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","微软雅黑",Arial,sans-serif;
+  user-select: none; /* 禁止用户鼠标在页面上选中文字/图片等 */
+  -webkit-tap-highlight-color: transparent; /* webkit是苹果浏览器引擎，tap点击，highlight背景高亮，color颜色，颜色用数值调节 */
+  background: var(--color-background);
+  color: var(--color-text);
+  /* rem vw/vh */
+  width: 100vw;
+}
+
+/* a标签取消下划线 */
+a {
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+/* 清除浮动 */
+.clear-fix::after {
+  clear: both;
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  visibility: hidden;
+}
+
+.clear-fix {
+  zoom: 1;
+}
+
+.left {
+  float: left;
+}
+
+.right {
+  float: right;
+}

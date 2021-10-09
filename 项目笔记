@@ -1,0 +1,1498 @@
+克隆github的仓库，将本地文件复制进仓库，再推送上github
+1.vue create supermall123  脚手架3初始化项目
+2.git clone https://github.com/kwqlymtctzl/supermall.git(将supermall123的代码复制给supermall，除了重复代码),克隆下来的supermall里面有.git文件夹，已经和远程仓库连接起来了
+3. cd supermall
+4.git status(文件变红，因为刚进去这个仓库时，这些东西都没在代码管理之下)
+5.git add --all (把所有东西加进去)
+6.git commit -m '初始化项目'(提交到本地)
+7.git push   (提交到github)
+8.以后改完代码git add、commit和git push就可以了
+
+假如没有将代码拷贝到克隆的仓库，而是想直接和远程仓库联系起来,方法2就可以了(在github创建空的仓库可以看到下面的指令)
+1.起别名
+git remote add origin https://github.com/kwqlymtctzl/tesstmall.git  
+2. 推送分支
+git push origin master
+或者
+git push -u origin master (这里main好像是主分支,老师的是master)
+
+
+一：划分目录结构
+components中的common文件夹用于存放别的项目也能使用的公共组件(比如导航栏，轮播图，底部)，content文件夹用于存放本项目使用的公共组件
+src的common文件夹用于存放公共的js文件，js变量
+
+
+
+二：css
+1.去github拿到normalize.css样式重置表(在很多浏览器中，标签长得不一样，比如input,引入这个是为了统一规范)和创建base.css文件
+2.base导入normalize.css和写项目的样式
+  主要写什么呢：清楚浏览器内外边距，a标签的颜色和下划线，清除浮动
+3.去App.vue导入这个base.css,而App.vue被main.js引用了，所以项目在打包的时候，从main.js先找到App,App有引用了base.css,到时候也会被打包
+
+
+
+三：vue.config配置别名, .editorconfig统一代码风格
+1.写路径的时候就不用../../,之前脚手架2讲过，脚手架3将配置的东西都隐藏起来了,在node_modules-->@vue-->cli-service里面
+2.但node_modules一般不能动,创建vue.config.js文件,里面写的配置会和公共的配置合并的
+3./assets/css/base.css就可以直接写作assets/css/base.css
+4.另外，脚手架2生成项目时会多创建一个.editorconfig文件(用于代码分格的统一，比如缩进空格)
+脚手架3没有，需要自己添加，
+
+
+
+四：tabbar引入和项目模块划分(先弄好tabbar,项目模块就划分好了，而不是先弄导航)(公共组件)
+1.把tabbar文件夹和MainTabBar.vue文件复制过来放好位置,把文件路径修改正确，MainTabBar.vue导入tabbar文件夹的两个文件并注册
+2.注意这里可以用别名，就不会出现大量../，且在dom里使用别名，要在前面加波浪线~ 
+3.App导入MainTabBar.vue，组件注册
+4.下载路由npm install vue-router --save,因为用到路由
+5.在router文件夹新建文件index.js
+6.把之前tabbar的四个组件和路由配置都拿过来
+7.就可以在App添加<router-view></router-view>标签了
+8.npm run server 检查
+
+
+
+五：小图标的修改：即网页最顶部的小图标，不改默认是vue的图标
+public-->index.html--><link rel="icon" href="<%= BASE_URL %>favicon.ico">,换一下favicon.ic文件就可以看到替换public上的favicon.ico图标即可
+题外小知识：<%= BASE_URL %>是jsp语法，为什么能用在前端呢？放心，打包到dist文件夹后就没有了(public里面的东西在打包的时候会原封不动的打包到dist文件夹，但是会压缩)
+
+
+
+六：导航栏的封装(公共组件)
+1.创建NavBar.vue封装公共的导航栏内容
+2.导航栏只有首页才有的内容放在Home.vue，样式也是
+总结:NavBar导航栏虽然只有一个购物街，但因为是公共组件，所以这里的给导航栏三个插槽而不是一个(为什么放插槽，因为是公共组件，其中的内容不尽相同，可以随时替换)
+然后在Home导入注册使用NavBar,Home的'购物街的div' 匹配到NavBar中别名为center的插槽并放到center插槽 
+
+
+
+七：请求首页的多个数据
+1.写好网络封装request.js,
+2.安装axios,npm install axios --save
+3.这样所有的组件都面向request.js,但Home不应该直接面向request.js发起网络请求,而是再封装,
+  再弄一个home.js写网络请求,这样首页发送网络请求的url就不会与首页的代码耦合在一起了(首页可能会用多次url)
+  首页面向的就是home.js开发,首页所有的网络请求都放在home.js里面。
+  总结：在网络封装request.js和组件之间再弄一个发起网络请求的封装home.js(避免url与组件耦合/依赖，方便管理代码)
+4.Home首页导入home.js,确定什么时候发起网络请求(组件创建的时候),所以需要在生命周期函数create(){}里面发起网络请求，并在data保存请求数据
+
+
+
+八：轮播图的展示
+1.导入已经封装好的轮播图，放入components/common/swiper,属于公共组件
+2.swiper文件夹中的index.js导入两个组件，再导出就为了少写一个导入
+3.在home文件夹创建首页的子组件HomeSwiper.vue,以免Home.vue太多东西
+4.首页的子组件HomeSwiper.vue导入swiper文件夹里面的两个组件swiper和swiper-item，
+  swiper组件是整个轮播图
+  swiper-item组件就是轮播图的每一张图片，需要遍历
+其间遇到的问题：
+1.SwiperItem 取消style中的scoped
+2.:key="item.acm" 不写报错
+3.图片具有点击效果，所以a标签，但是点击a好像发送了网络请求，好像还没做这些
+4.:banners="banners"动态绑定，没有这个只显示第一张图片？
+5.轮播图的小点点不了，且要多次刷新才正常轮播，手机好像就是点不了的，只能滑动
+
+
+
+九：推荐信息的展示(考核CSS)
+1.创建首页的子组件HomeRecommendView.vue文件,写好模板和样式：为了home不要太多内容 弄了很多子组件
+2.Home.vue导入，使用
+
+
+
+十：FeatureView的封装
+1.就是一张图片,同上面的步骤
+此时滚动首页会卡顿，用原生写到移动端和PC端会卡顿，以后用better scoll解决
+
+
+十一：TabControl的封装：属于业务逻辑，后面也用到，放在content/tabControl
+1.写样式
+2.点击谁谁变红和颜色底线
+3.向上翻,粘性
+
+
+
+十二：保存商品的数据结构设计/首页数据的请求和保存
+1.问题：点击新款时该展示的图片没展示出来，还是流行的页面，这是因为vue内部会对很多组件进行复用，用的还是流行的组件
+  解决：先一次性把流行/新款/精选三组数据一次性请求下来放到一个变量存储起来，点到哪个就从变量取出哪个
+2.数据结构设计：
+  变量goods对象保存流行/新款/精选三个对象，每个对象都有展示的页数和内容，假设每页有30条内容
+  (1)当用户上拉加载更多时，page+1,list的数据也增加30
+  (2)每个对象展示的页数不尽相同,即用户在每个对象拉取数据多少不一样
+  (3)一进来就要拿到三个对象的第一页数据并展示
+  goods: {
+        pop: { page: 5, list: [150] },
+        news: { page: 2, list: [60] },
+        sell: { page: 1, list: [30] },
+      },
+3.首页数据的请求和保存
+  (1)去到home.js再做个网络请求封装
+  (2)去Home发送网络请求,保存数据(此时created()很多东西,created应该只保存主要逻辑的东西,具体操作应该在别的地方)
+  相当于把created里面的东西拿到methods,在外面再套一层函数,就可以在created调用它了
+  created(){
+    this.getHomeGoods('pop') //注意这里要用this指明是下面套着的那个getHomeGoods(){},否则会认为发送网络请求，也可以起别的名字
+  }
+  methods:{
+    getHomeGoods(type){             //这里的type是整个pop
+      const page = this.goods[type].page + 1       //不能写死页数，以后加载还要复用这个函数  //注意这个是放在这里，不是下面，否则下面参数page就未定义
+      getHomeGoods(type, page).then((res) => {
+         console.log(res);
+         this.goods[type].list.push(...res.data.list)  //在(4)解释
+         this.goods[type].page +=1    //把pop默认页数0改为1，以后在调用这个函数就变成加载第二页的数据了
+      });
+    }
+  }
+  (3)通过在created连续调用三次拿到流行/新款/精选三个对象的第一页数据
+  (4)存储数据
+  不能通过赋值的方式直接给list,这样以后拿到第二页数据再赋值就会把第一页数据覆盖掉了
+  let totalNums=[]
+
+  const nums1 = [20, 11, 222]
+  cosnt nums2 = [111, 22, 333]
+  方法1：
+     for(let n of nums1){
+       totalNums.push(n)      //一个个push进去，下一次也这样
+     }
+  方法2：
+  totalNums.push(...nums1)      //它会依次对数组中解析nums1出来，然后塞到totalNums里面，利用push函数可以传多个参数的定义(totalNums.push(111,222,333,44))
+  (5)在devtools就可以看到拿到数据了
+
+十三：首页商品数据的展示：属于公共组件
+1.可以分为大组件GoodsList.vue和小组件GoodsListItem.vue
+2.先是大组件：
+  (1)导出，注册，使用
+  (2)接受数据 :父传子props并在标签赋值goods,不加冒号就变成字符串了<goods-list :goods="goods['pop'].list"></goods-list>
+  (3)根据拿到的数据确定在大组件遍历多少个小组件，导入小组件
+  (4)加样式
+问题：页面超出一点，可以往右拉
+
+十四：TabControl点击切换商品
+1.在TabControl发生点击，要把这个事件传出去,$emit发射事件和参数，外面商品页面才会知道
+2.首页接收事件和参数，触碰methods的方法,
+3.methods中的方法根据参数index确定要展示的页面
+4.在展示GoodsList的标签上改变，嫌弃太长可以做计算属性
+
+
+
+十五：Better-scroll实现滑动：注意这里的版本是1.13.2，如果用新版本new BScroll的写法可能不一样，弹幕说的
+BetterScroll 是一款重点解决移动端（已支持 PC）各种滚动场景需求的插件。它的核心是借鉴的 iscroll 的实现，它的 API 设计基本兼容 iscroll，在 iscroll 的基础上又扩展了一些 feature 以及做了一些性能优化。
+BetterScroll 是使用纯 JavaScript 实现的，这意味着它是无依赖的。
+
+
+项目部署到服务器，用手机端请求网页时发现快速拖动突然松手时没有滑动的效果,拉到末尾还有弹簧效果,且即使一个个拖动也会卡顿
+原生滚动就是当前内容超过整个页面的时候，页面的内容自动就会滚动，但是在移动端会卡顿，早期为了适配移动端这个问题，以前用iscroll解决,但不更新了
+所以为了移动端滚动更加丝滑，用一个框架better-scroll来适配移动端的滚动
+
+需求1：在页面部分区域实现滚动：暂时写在Category.vue
+如果用原生实现方法:   卡顿
+.wrapper {
+  height:150px;
+  background-color:red;
+  overfolw:hidden;
+  overflow-y:scroll;//实际上使用这个的时候，超出的部分自动会隐藏，相当于包含了overfolw:hidden;
+}
+如果使用better-scroll方法：21文件夹
+
+步骤
+1.安装better-scroll  npm install better-scroll@1.13.2  --save或者在github最新tag的dist文件夹下载js文件或已经安装在node_modules中的better-scroll文件夹可以找到该文件
+2.home.vue导入，注册，使用标签
+3.一般是在下面标签的里面放入滑动内容，但是为了避免better-scroll不在维护，修改麻烦还是要封装
+   <!-- <div class="wrapper">
+         <div class="content">
+
+         </div>
+         </div> 
+    -->
+4.封装scroll.vue，因为别的页面也需要这个滑动，滑动内容放在组件<scroll></scroll>中
+注意：
+1.必须给最外层设置滑动区域的宽度，才能实现滑动：但是这个宽度因为不同的手机屏幕宽度不同，因此不能写死，需要利用calc()配合vh单位计算，或者利用子绝父相
+期间有很多问题：
+粘性定位失效:因为不是原生的滚动了，是better-scroll在滚动，系统没法检查滚动到哪里了
+tab-control失效:滑动区域内的标签不能设置click监听
+calc的运算符前后必须有空格,height: calc(100% - 93px)中的100%要配合100vh使用，否则100%指的是内容的100%
+不能使用padding-top,只能使用margin-top
+2.滑动区域内的标签不能设置click监听，即使在scroll标签中的是组件标签也是一样，组件标签内若含有click监听或组件含有click监听都会失效, 除非new BScroll的时候给参数click:true, 除了button,
+
+
+十六：backTop:别的页面也需要，创建backTop.vue在content文件夹
+实现效果：
+1.点击backTop回到顶部：利用@click.native='backClick'监听事件并调用backClick函数,backClick函数内又调用scrollTo函数, 而scrollTo函数的内容确实封装在scroll.vue，因为别的页面可能不需要回到顶部
+2.默认不显示，滑动到y轴一定距离才显示：在scroll.vue监听滑动,并利用$emitscroll发射事件和position，<scroll>接收事件并调用函数@scroll="contentScroll",contentScroll函数内部判断position的y轴位置，再动态确定backTop是否显示，还要:probe-type="3"动态绑定是否监听位置，因为别的组件在复用时可能不需要监听位置
+
+注意点：
+1.@click不能直接监听组件，需要加.native，但是<tab-control>的tabClick为什么可以
+
+
+十七：上拉加载更多
+1.home动态绑定数据，确定是否需要上拉加载更多这个功能
+2.scroll.vue发射事件，home接受事件并调用函数发送网络请求，同时将请求回来的goodlist拼接，page+1,还调用了finishPullUp()函数才能实现多次加载
+3.
+  better-scroll的bug:滑动有时候上拉不了，有时候又可以
+1.因为better-scroll会计算可滚动区域的宽度(整个滚动高度 - wrapper的高度，剩下的就是即将进入滚动区域的内容的高度)
+普通的滚动不会出现bug，但是这里goodlist有很多图片，图片都是异步加载，所以better-scroll在计算的时候图片还没有加载出来，
+高度就已经写死了，等图片加载出来，撑开，内容的高度本应该更高的，但是高度已经写死了，所以会滑动不了
+ console.log(this.scroll)//BScroll对象里面有个scrollHeight属性记录这个高度
+ 所以可以this.scroll.scrollHeight=1000000手动改变这个高度
+2.有时候又可以是因为是因为在高度还没计算完图片就已经加载出来了
+  解决方法：监听图片加载完，拿到this.$refs.scroll里面的scroll的refresh()方法做一次刷新，就会重新计算可滚动的区域
+  有人说最新版：设置observeDOM:true就可以了，observe-dom开启对 content 以及 content 子元素 DOM 改变的探测，当这些 DOM 元素发生变化时，将会触发 scroll 的 refresh 方法
+
+
+如何解决：
+1.监听每一张图片是否加载完成，只要有一张图片加载完成了，执行一次refresh()
+2.那如何监听图片加载完成呢？这里的图片都写在GoodListItem组件的img里面
+  (1)可以用原生的js方法监听图片img.onload = function(){},但是在vue里面没有必要，因为它里面已经给我们封装了一个事件，这样就不需要直接操作dom，直接在img标签里面监听
+  (2)在Vue监听图片<img @load="imageLoad"/>就可以监听图片是否加载完,然后执行imageLoad函数,在imageLoad函数里面调用refresh函数
+     但是refresh函数是在scroll组件的scroll对象中, scroll组件是home的子组件，GoodList组件是home的子组件，GoodListItem是GoodList的子组件,两个组件之间没有关联
+     法一：home能通过this.$refs.scroll.scroll.refresh拿到方法,GoodListItem把事件传给GoodList,再由GoodList传给home,但是这样太麻烦
+     法二：再弄一个vuex对象，GoodListItem每一次图片加载完就通过this.$store改变vuex里面的某一个属性的状态；再让home引用vuex这个属性，并让它实时监听vuex这个属性的改变，一旦改变就可以在home执行this.$refs.scroll.scroll.refresh，相当于用vuex做一个中间通信
+     法三：公共的地方有一个时间总线，事件总线与vuex对象很像，但是不是用来管理状态的，而是用来管理事件的
+           在GoodListItem通过this.$bus.$emit('aaa')发射事件到事件总线，然后在home的created生命周期函数里面监听发射出来的事件this.$bus.$on('aaa',function)，通过function执行this.$refs.scroll.scroll.refresh
+           但是 默认情况下程序是没有$bus的,需要在main.js给Vue的原型的$bus并赋值为vue实例 ： Vue.prototype.$bus = new Vue(),Vue实例是可以作为事件总线的
+           脚手架4用mitt代替$bus
+
+
+bug：找不到refresh导致报错
+原因1：GoodListItem监听图片是否加载完，并发射事件，在home的created函数内监听事件并调用this.$refs.scroll.refresh(),从而调用scroll组件内的refresh方法
+      当网速太快时，GoodListItem的30张图片一来就加载完成，home组件一创建就要调用scroll对象的refresh方法，但是scroll组件的mounted还没有初始化好BScroll对象，this.$refs.scroll.scroll拿到的是一个null,里面没有refresh函数，所以报错
+原因2：改正：home组件不应该在created监听发射过来的时间，因为在created里面通过this.$refs.scroll/document.querySelector的方法很有可能拿不到，为空，应该在mounted里监听
+解决方法1：this.scroll && this.scroll.refresh()  通过逻辑与 在scroll组件 判断this.scroll是否为真，为真才会执行refresh函数
+解决方法2： 在mounted监听事件
+
+问题：这样调用refresh函数太过频繁，每一次图片加载完成就要调用一次
+比如百度搜索，input输入框每输入一个字母就向服务器发送请求，然后做将请求结果在下面展示
+通过@change监听搜索框内容的改变同时拿到value，只要value变化了就向服务器发送请求，value变化一次就向服务器发送一次请求，但是这样对服务器的压力非常大，因为用的用户输入速度是非常快的，比如输入yifu,value变化了四次，就要请求四次数据，完全没有必要
+所以要做一个防抖动函数，输入一个y等待50ms,如果50ms内又输入i,则将准备发送的请求取消掉，50ms没有输入，才将yi整体发给服务器，用于防止单位时间内连续发送网络请求
+
+这里频繁调用refresh也是一样，进行防抖操作：防抖debounce/节流throttle(这个课下研究)
+本来这样写：
+ mounted() {
+    this.$bus.$on("itemImageLoad", () => {
+       this.$refs.scroll.refresh()
+    });
+  },
+封装防抖函数：
+ mounted() {
+   //上面的refresh是个局部变量，但是不会被销毁，因为下面有调用它refresh()
+    const refresh = this.debounce(this.$refs.scroll.refresh,200) //this.$refs.scroll.refresh不加括号，因为传入的是一个函数，如果加括号就是把调用结果传进去
+  //这里即使没有传入延迟时间时，setTimeout异步操作在事件循环里面总是放在最后执行，而在setTimeout还没有执行完的时候，就加载完一次图片，就会执行一次refresh(),因此clearTimeout就会把它取消掉，所以即使没有输入延迟时间，防抖也会起效
+    
+    this.$bus.$on("itemImageLoad", () => {
+      refresh()   这里调用的是上面的refresh，图片加载完一张就调用一次
+    })
+  },
+
+  methods: {
+    debounce(func, delay) {
+      let timer = null                //timer也是个局部变量，但是没有被销毁，因为内部的函数引用了它，形成闭包
+      return function (...args) {     //...argus是可以接收多个参数
+        if (timer) clearTimeout(timer)
+        timer = setTimeout(() => {
+          func.apply(this, args)      //apply可以改变this指向
+        }, delay)
+      }
+    },
+  }
+//具体思路：
+1.加载完第一张图片，执行一次refresh(),把this.$refs.scroll.refresh传入防抖函数，第一次的timer为null，不需要clearTimeout,开始执行setTimeout里面的内容
+2.在setTimeout执行期间如果有第二张图片加载完成就会再调用一次refresh(),再把this.$refs.scroll.refresh传入防抖函数，第二次的timer不再为null, 需要clearTimeout取消上一次的setTimeout,然后开始执行setTimeout里面的内容
+3....以此类推,直到第30次，这样就不会频繁调用refresh()了(这里的refresh已经被赋值防抖函数了，而不是scroll.vue里面的scroll对象的refresh方法),由网速确定调用多少次，如果超过时间图片还没加载完就要调用一次，最多30次，最少1次
+但是都是调用函数方法有什么区别，这里也要调用很多次防抖函数呀？还是说这里只是为了把防抖知识点应用上，真是的防抖还是用于搜索框？
+
+防抖函数别的页面也会需要，在common文件夹创建utils.js(utils工具)
+
+十八：tabControl的吸顶效果 ：原本是使用粘性定位，但是因为不是原生的滚动了，而是在better-scroll中滚动，系统没法检查滚动到哪里了
+第一步：
+1.必须知道滚动了多少时，开始有吸顶效果，获取tabControl的offsetTop属性，但是组件是没有offsetTop属性，组件模板元素才有，需要获取tabControl的元素
+2.通过this.$refs.tabControl.$el的$el属性可以获取组件中的元素(所有组件都有一个属性$el,用于获取组件中的元素)
+3.然后通过 this.tabOffsetTop = this.$refs.tabControl.$el.offsetTop拿到并保存好offsetTop值
+4.但是拿到的是一个不固定的数值，mounted是挂载的意思，确实所有的组件都已经挂载在上面了，但是图片不一定被加载完了, 可能有的图片高度还没有被撑起来，所以offsetTop拿到的高度是不固定的
+  一般情况下是轮播图加载慢的原因，监听轮播图是否加载完成再获取offsetTop,但是老师这个方法不严谨呀,就监听轮播图，如果其他图片加载过慢呢
+5.在homeswiper组件通过@load监听图片是否加载完成，触发并发射事件，home与homeswiper是父子组件，不这里需要事件总线的方法，直接在homeswiper组件标签上接收事件并触发事件，
+  此时才可以通过this.tabOffsetTop = this.$refs.tabControl.$el.offsetTop拿到并保存好offsetTop值
+6.另外只需要一张轮播图的图片就能把高度撑开，不需要在homeswiper监听轮播图的四张图片的加载，发射四次事件，可以在homeswiper组件做一次判断，发射一次事件就不再发射了
+7.另外注意这里不进行多次调用和debounce的区别：debounce是防止频繁调用，而这里只需要调用一次就行，避免浪费性能
+
+第二步：获取滚动的高度与tabOffsetTop对比,如果滚动高度大于tabOffsetTop就把tabControl改为固定定位，但是发现bug，tabcontrol滚动到导航栏下面就不见了
+        解决方法在home.vue
+第三步：better-scroll里的tabcontrol组件点击'精选'，滚到上面时，外面的tabcontrol组件显示的是'流行'，即两个tabcontrol组件不一致
+       解决方法；在tabClick方法加上两行代码，让better-scroll里的tabcontrol组件和外面的tabcontrol组件的点击保持一致
+      this.$refs.tabControl1.currentIndex = index; //tabcontrol组件有个currentIndex记录点击了谁
+      this.$refs.tabControl2.currentIndex = index;
+
+
+
+十九：Home离开时记录状态和位置
+问题：离开Home组件，组件会被销毁，再回来Home不能原本位置
+验证：在Home设置一个destoryed声明周期函数，可以看到离开就打印出已销毁
+解决方法：在App.vue的router-view外面使用keep-alive缓存，这样就不会销毁了，可以用destoryed验证没有销毁
+
+另一个问题：虽然keep-aliv使得组件没有被销毁，但是返回Home组件时，并不能百分百保证保持原本位置，偶尔还是会错位，这是better-scroll内部的问题
+解决方法：离开时保存位置信息，进来时，将位置设置为原来保存的位置信息即可
+1.使用了keep-alive就有了activated和deactivated这两个生命周期函数，可以验证：在Home可以设置这两个函数，离开和进入Home组件打印了活跃和不活跃
+2.离开Home组件时，在deactiveated保存离开的位置
+deactivated() {
+    console.log("deactived");
+    this.saveY = this.$refs.scroll.getScrollY();
+  }
+其中getScroll函数封装在scroll.vue
+    getScrollY() {
+      return this.scroll ? this.scroll.y : 0;
+      // 先判断scroll有没有值,有值scroll.y就有值
+    },
+3.回到Home组件时，在activated跳到离开时的位置
+activated() {
+    console.log("actived");
+    this.$refs.scroll.refresh();//这里要做一次刷新，因为在多次离开和进入Home组件时，最后一次进入Home组件，会发现滑动不了了,然后突然回到顶部
+    //先刷新再滚动好一点
+    this.$refs.scroll.scrollTo(0, this.saveY, 0);//0ms就要跳转，不能有延迟
+   
+  },
+
+
+
+二十：点击商品 跳转详情页，不同的商品有不同的id
+1.监听goodListItem的点击
+ @click="itemClick"
+ 
+   itemClick() {
+      console.log("跳转到详情页");
+      this.$router.push("/detail");//详情页有返回，不能用replace
+    }
+ 
+ 2.给详情页配置路由，详情页也属于大的试图的一部分，放在views文件夹的detail
+ 来到index.js路由配置
+  {
+        path: '/detail',
+        component: Detail
+    }
+3.跳转的过程中还需要传递一些参数，比如id,这样详情页才能根据id去请求相应的内容
+方法：通过动态路由或者query传参
+(1)在GoodListItem
+ itemClick() {
+      console.log("跳转到详情页");
+      this.$router.push("/detail" + this.goodsItem.iid); //在devtools可以看到iid,点击不同的goodslistitem传送不同的iid
+    },
+(2)在index.js
+  {
+        path: '/detail:iid',
+        component: Detail
+    }
+(3)在Detail.vue
+created() {
+    this.iid = this.$route.params.iid;
+  },
+
+二十一：详情页导航栏的封装，进入DetailNavBar.vue
+(1)导入注册之前封装的导航栏:之前是用三个slot具名卡槽
+(2)先匹配名为left的slot卡槽:
+<div slot="left" class="back" @click="backClick">
+      <img src="~assets/images/common/back.svg" alt="">
+    </div>
+然后设置样式，移动一下位置;然后设置点击事件，返回上一页
+    backClick() {
+      this.$router.back();
+      // this.$router.go(-1);
+    },
+(3)匹配名为center的slot卡槽
+<div slot="center" class="title">
+      <div v-for="(item,index) in titles" :key="item.index" class="title-item" :class="{active:currentIndex===index}" @click="titleClick(index)">{{item}}</div>
+    </div>
+先遍历tiltes数组展示四个参数，
+v-for="(item,index) in titles" :key="item.index"  后面的key不写会出现红色波浪线
+
+    data() {
+      return {
+        titles: ["商品", "参数", "评论", "推荐"],
+        currentIndex: 0,
+    };
+
+给flex布局，
+.title {
+  display: flex;
+}
+.title-item {
+  flex: 1;
+}
+
+动态绑定样式，点击谁谁变化，循环遍历的时候就已经给四个参数具体的index了，
+:class="{active:currentIndex===index}"    默认第一个红色
+再监听点击事件
+@click="titleClick(index)"
+
+    titleClick(index) {
+       this.currentIndex = index;
+    }
+
+
+二十二：轮播图：是详情页Detail的子组件，放在DetailSwiper.vue
+首先在详情页Detail请求数据，并保存在data的topImages
+created() {
+    //1.保存传入的iid
+    this.iid = this.$route.params.iid;
+    //2.根据iid请求详情页数据
+    getDetail(this.iid).then((res) => {
+      //(1)获取顶部的图片轮播数据
+      console.log(res);
+      this.topImages = res.result.itemInfo.topImages; //拿到的是图片的地址
+      //保存到topImages,这样data就拿到了数据，就可以在devtools看到数据了，另外真实开发是自己去找到数据放在哪里的
+    });
+  },
+然后导入DetailSwiper组件，注册，使用组件标签，在组件标签动态绑定数据，用于给子组件传递数据
+<detail-swiper :top-images="topImages"></detail-swiper>
+ <!-- 这里的top-images原本在DetailSwiper.vue是驼峰，写在这里便横杠 -->
+
+然后DetailSwiper接受数据
+ props: {
+    topImages: {
+      type: Array,
+      default() {
+        return [];
+      },
+    },
+  }
+然后导入轮播图，注册，使用其组件标签,循环遍历拿到的图片，img动态绑定图片地址，
+  <swiper class="swiper-item">
+    <swiper-item v-for="item in topImages" :key="item" >
+      <img :src="item" alt="">
+    </swiper-item>
+  </swiper>
+这里样式要给固定高度，轮播图才起效，不能起类名swiper，因为引入的轮播图源码有document.querySelector也会拿到这个类名
+.swiper-item {
+  height: 300px;
+  overflow: hidden;
+}
+这时候发现轮播图正常显示了，但是返回Home.vue,进入另外一个GoodsListItem,发现还是这个轮播图，
+之前是有监听每个GoodsListItem，然后动态获取iid的，这里应该拿到不同的数据才对
+因为之前在App.vue给router-view一个keep-alive，这意味着里面的组件都会缓存，都不会执行created函数，
+这样GoodsListItem确实监听点击传出来了iid,但是详情页Deatil.vue不会执行created函数，就不会请求数据
+就会一直是之前的轮播图
+created() {
+    //1.保存传入的iid
+    this.iid = this.$route.params.iid; 
+    //2.根据iid请求详情页数据
+    getDetail(this.iid).then((res) => {
+      //(1)获取顶部的图片轮播数据
+      console.log(res);
+      this.topImages = res.result.itemInfo.topImages; //拿到的是图片的地址
+      //保存到topImages,这样data就拿到了数据，就可以在devtools看到数据了，另外真实开发是自己去找到数据放在哪里的
+    });
+  },
+}
+解决方法：在App.vue加上exclude属性，注意属性值要和组件的name一样
+   <keep-alive exclude="Detail">
+      <router-view></router-view>
+    </keep-alive>
+
+二十三：详情页--商品基本信息的展示
+通过查看之前拿到的数据，商品基本信息在不同的地方，很乱，真实开发中是需要整合到一个地方的，不能一边去一边做，很容易乱
+在details.js做一个整合,传入需要的请求数据，整合到一个对象里面，这样才符合面向对象
+export class Goods {
+    constructor(itemInfo, columns, services) {
+        this.title = itemInfo.title;
+        this.desc = itemInfo.desc;
+        this.newPrice = itemInfo.price;
+        this.oldPrice = itemInfo.oldPrice;
+        this.discount = itemInfo.discountDesc;
+        this.columns = columns;
+        this.services = services;
+        this.realPrice = itemInfo.lowNowPrice;
+
+    }
+}
+然后就可以将数据保存起来了，保存到data事先准备好的空的goods对象里面，此时通过devtools可以看到拿到的数据
+  created() {
+       //(2)获取商品信息
+      this.goods = new Goods(  
+        data.itemInfo,
+        data.columns,
+        data.shopInfo.services
+      );
+  }
+然后通过动态绑定和props传数据给DetailBaseInfo.vue
+ <detail-base-info :goods="goods"></detail-base-info>
+  props: {
+    goods: {
+      type: Object,
+      default() {
+        return {};
+      },
+    },
+  },
+然后DetailBaseIndo.vue就可以做数据展示了，再修改下样式就可以了
+此时有个小报错"TypeError: Cannot convert undefined or null to object"，
+因为props需要传的是Object,组件标签动态Details.vue的data的goods写的是null,改为空对象{}
+
+二十四：店铺信息的解析和展示
+1.同样的，在detail.js整合数据
+export class Shop {
+    constructor(ShopInfo) {
+        this.logo = ShopInfo.shopLogo;
+        this.name = ShopInfo.name;
+        this.fans = ShopInfo.cFans;
+        this.sells = ShopInfo.cSells;
+        this.score = ShopInfo.score;
+        this.goodsCount = ShopInfo.cGoods
+    }
+}
+2.然后就可以将数据保存起来了，保存到data事先准备好的空的shop对象里面，此时通过devtools可以看到拿到的数据
+  created() {
+      //3.创建店铺信息的对象
+      this.shop = new Shop(data.shopInfo);
+  }
+3.然后通过动态绑定和props传数据给DetailShopInfo.vue
+<detail-shop-info :shop="shop"></detail-shop-info>
+
+props: {
+    shop: {
+      type: Object,
+      default() {
+        return {};
+      },
+    },
+  },
+然后DetailBaseIndo.vue就可以做数据展示了，再修改下样式就可以了
+
+二十五：去除底部的tabbar
+因为在App,tabbar是一直放在下面的，且是固定定位，不占位置，就会压住详情页
+    <keep-alive exclude="Detail">
+      <router-view></router-view>
+    </keep-alive>
+    <main-tab-bar></main-tab-bar>
+详情页是不需要tabbar,所以
+方法一：需要给详情页脱离标准流，压住tabbar
+#detail {
+  position: relative;
+  z-index: 9999; 
+  background-color: #fff;
+}
+方法二：在路由配置信息里面除了详情页，其余写 meta: {footShow: true }，
+然后在App.vue 的tabbar组件标签那写v-if="$route.meta.footShow"
+    <main-tab-bar v-if="$route.meta.footShow"></main-tab-bar>
+
+
+二十六：加入滚动效果的better-scroll
+1.导入，注册，使用组件标签
+2.给类名，写样式，必须要有固定高度
+
+//详情页
+#detail {
+  height: 100vh;
+}
+
+//滑动区域
+.content {
+  height: calc(100% - 44px);
+  /* 这里的100%是根据父的高度来决定的，而父的高度由内容撑开，滚动区域就会很大，所以要给父级100vh一个确定的高度 */
+  overflow: hidden;//不写这个，滑出去的部分会挡住导航栏
+}
+
+
+二十七：商品详情数据展示
+1.将数据保存起来了，保存到data事先准备好的空的detailInfo对象里面，此时通过devtools可以看到拿到的数据
+  created() {
+      //(5)获取商品详细信息
+      this.detailInfo = data.detailInfo;
+  }
+2.然后通过动态绑定和props传数据给DetailGoodsInfo.vue
+<detail-goods-info :detail-info="detailInfo"></detail-goods-info>
+  props: {
+    detailInfo: {
+      type: Object,
+      default() {
+        return {};
+      },
+    },
+  },
+3.然后DetailGoodsInfo.vue就可以做数据展示了，再修改下样式就可以了
+
+4.但是better-scroll会计算可滚动区域的高度时，有的图片没加载出来，滑动高度就已经确定了，所以有时候不能往下滑动，所以需要监听每张图片的加载完成，触发函数进行刷新
+<img @load="ImageLoad"/>
+
+methods:{
+  imgLoad(){
+     //判断，所有图片都加载完了，那么进行发射一次就可以了,然后在组件标签监听事件，触发回调函数做一次刷新即可，缺点就是需要等所有图片都加载完才能滑动，用户体验差
+     if(++this.counter === this.imagesLength){
+       this.$emit('imageLoad')
+     }
+  }
+}
+
+上面的方法不好，还是应该用防抖，每张图片加载完就刷新一次，然后用防抖避免频繁刷新
+//DetailGoodsInfo.vue发射事件
+methods:{
+  imgLoad(){
+    this.$emit('imageLoad')
+  }
+}
+
+//Detail监听事件触发函数
+methods: {
+    imageLoad() {
+      const refresh = debounce(this.$refs.scroll.refresh, 0.01);
+      refresh();
+    },
+  },
+但是不能像上面那样使用防抖函数，每次调用imageLoad就要给refresh重新赋值，这样就起不到防抖的效果了，
+看下面防抖的代码：
+如果像上面那样调用，就会
+第一个图片加载完，调用一次防抖，timer为空，不用清除，然后返回一个timer对象赋值给refresh，然后调用
+第二次图片加载完，调用一次防抖，timer为空，不用清除，然后返回一个新的timer对象赋值给refresh，然后调用
+这样就起不到防抖的效果，不管第二张图片在指定时间内有没有加载完都是重新计算，进行刷新;应该在第二张图片加载完应该清空第一张的timer，重新计算
+所以refresh()调用，应该放在一个函数里面，形成闭包，这样就记录了第一张图片加载完时返回的timer
+然后第二张图片在指定时间内加载完，因为闭包的原因，refresh再被调用，赋值的是上一次的timer
+export function
+    debounce(func, delay) {
+    let timer = null; //timer也是个局部变量，但是没有被销毁，因为内部的函数引用了它，形成闭包
+    return function (...args) {
+        //...argus是可以接收多个参数
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => {
+            func.apply(this, args); //apply可以改变this指向，否则this指向window
+        }, delay);
+    };
+}
+
+这样理解：
+每调用一次name就被重新赋值一次，每次用到的name都是不一样的
+imageLoad(){
+  let name='why'
+  console.log(name)
+}
+而下面的每调用一次a(),因为形成闭包，每次都是一样的
+imageLoad(){
+  let name='why'  不会被赋值多次
+  function a(){
+    console.log(name)  反而是使用多次
+  }
+}
+那应该怎么做呢：因为mounted也用到了防抖函数
+ mounted() {
+    const refresh = debounce(this.$refs.scroll.refresh, 0.01);
+    this.itemImgListener = () => {
+      refresh();
+    };
+    this.$bus.$on("itemImageLoad", this.itemImgListener);
+  },
+改为
+data(){
+  return {
+    newRefresh:null
+  }
+}
+
+ mounted() {
+    this.newRefresh = debounce(this.$refs.scroll.refresh, 0.01);
+    this.itemImgListener = () => {
+      this.newRefresh()
+    };
+    this.$bus.$on("itemImageLoad", this.itemImgListener);
+  },
+
+这样就可以直接调用mounted的防抖了
+methods: {
+    imageLoad() {
+      this.newRefresh()
+    };
+
+  },
+
+
+5.而imagesLength是需要获取的，通过watch监听props传过来的detailInfo,一开始Detail那边的data是一个空对象通过动态绑定传过来，请求完数据才再次将数据传过来
+所以需要watch监听属性的变化，变化一次就执行一次
+watch:{
+  detailInfo(){
+    //获取图片的个数
+    this.imagesLength = this.detailInfo.detailImage[0].list.length
+  }
+}
+
+而要获取imagesLength，需要通过this.detailInfo.detailImage[0].list.length拿到，可以用这一长串替换上面的this.imagesLength，影响性能
+如果觉得图片每次加载完都要调用这么长串的代码，就直接替换，删掉watch等过程
+6.然后在Detail监听发射的事件,调用函数刷新
+
+methods: {
+    imageLoad() {
+      this.$refs.scroll.refresh();
+    },
+  },
+
+二十八：商品参数的展示
+1.将数据保存起来了，保存到data事先准备好的空的paramInfo对象里面，此时通过devtools可以看到拿到的数据
+  created() {
+       //(6)获取参数的信息
+      this.paramInfo = new GoodParam(
+        data.itemParams.info,
+        data.itemParams.rule
+      );
+  }
+2.然后通过动态绑定和props传数据给DetailParamInfo.vue
+<detail-params-info :param-info="paramInfo"></detail-params-info>
+  props: {
+    paramInfo: {
+      type: Object,
+      default() {
+        return {};
+      },
+    },
+  },
+3.然后DetailParamInfo.vue就可以做数据展示了，再修改下样式就可以了，具体样式还没看
+
+
+二十九：商品评论信息的展示
+1.将数据保存起来了，保存到data事先准备好的空的commentInfo对象里面，此时通过devtools可以看到拿到的数据
+  created() {
+      //(7)取出评论信息
+      if (data.rate.cRate !== 0) {
+        this.commentInfo = data.rate.list[0];
+      }
+  }
+2.然后通过动态绑定和props传数据给DetailCommentInfo.vue
+<detail-comment-info :comment-info="commentInfo"></detail-comment-info>
+  props: {
+    commentInfo: {
+      type: Object,
+      default() {
+        return {};
+      },
+    },
+  },
+3.然后DetailCommentInfo.vue就可以做数据展示了，再修改下样式就可以了
+4.这里侧重讲一下用户评论的时间格式化：
+  后台给的数据的单位是s秒(以时间元年为起点，返回对应的时间戳),以便于展示不同的时间格式
+
+  问题：如何将时间戳 转成 时间格式化字符串
+  时间戳：1535694719(秒)
+  1.将时间戳转成Date对象
+    const date=new Date(1535694719*1000)  这里要求传入ms毫秒
+  2.将date进行格式化，转成对应的字符串
+    法一：利用date.getYear() + date.getMonth()+1
+    法二：因为这个功能太常用了，程序员电脑一般都有FormatString函数用于转换，放在common文件夹的utils.js文件
+      fmt.FormatString(date,"yyyy-MM-dd hh:mm:ss") 
+      yyyy是年份，比如2018年，如果只有两个y,就是18,这里只能是y，不能用其他字母，
+      类似的MM是月份(大写跟mm分钟区分),dd是日期,hh是小时(小写是12小时制，HH是24小时制)，mm分钟，ss秒
+      横杠是格式，想要什么格式就用什么分割符，比如yyyy/MM/dd hh/mm/ss对应2016/6/4 10/10/10
+
+
+三十：商品推荐信息的展示
+1.由于推荐信息的数据在另一个接口，所以需要在detail.js再弄一个请求封装
+export function getRecommend() {
+    return request({
+        url: '/recommend'
+    })
+}
+2.Detail.vue导入,使用,把请求的数据保存起来
+
+   data() {
+     return {
+        recommends: [],
+     };
+   },
+
+   //请求推荐信息的数据
+    getRecommend().then((res) => {
+      console.log(res);
+      this.recommends = res.data.list;
+    });
+3.由于推荐信息跟外面Home组件的GoodsListItem是一样的，所以导入GoodsList,注册，使用组件标签，通过动态绑定传输数据
+<goods-list :goods="recommends"></goods-list>
+
+props: {
+    goods: {
+      type: Array,
+      default() {
+        return [];
+      },
+    },
+  },
+4.这时候报错，找不到img数据，因为之前在 Home组件拿到的数据的图片位置命名 跟 详情页拿到的数据的图片位置命名 不一样
+之前是这样的<img :src="goodsItem.show.img" @load="imageLoad">
+但是现在拿到的数据没有show.img,所以这里做个计算属性来判断拿的是Home的数据还是详情页的推荐信息
+ <img :src="showImage" @load="imageLoad">
+
+ computed: {
+    showImage() {
+      return this.goodsItem.image || this.goodsItem.show.img;
+    },
+  },
+
+
+三十一：首页和详情页监听全局事件和mixin的使用
+问题一：因为详情页商品推荐信息 和 Home首页用的商品展示 用的是同一个GoodsList
+而GoodsList有一个监听图片每一张加载完就发射事件，Home接收事件并调用refresh函数做一次刷新
+但是此时因为详情页也用到了这个组件，详情页的图片加载完去刷新Home首页是不合理的
+imageLoad() {
+      this.$bus.$emit("itemImageLoad");
+    },
+需要对GoodListItem里面的这个发射事件的函数做修改
+方法一：
+imageLoad() {
+  if(this.$route.path.indexOf('/home')！== -1){
+      this.$bus.$emit("homeitemImageLoad");
+    }else if(this.$route.path.indexOf('/detail')！==-1){
+       this.$bus.$emit("detailitemImageLoad");
+    }
+}
+方法二：在Home.vue的deactiveted函数取消全局监听
+ deactivated() {
+    //2.取消全局事件的监听
+    this.$bus.$off("itemImageLoad", this.itemImgListener); 
+ }
+第一个参数是GoodListItem监听每张图片加载完发射出的事件，
+第二个参数是Home组件监听到每张图片加载完发射出的事件时要执行的函数,所以需要对第二个参数进行提取
+ data() {
+    return {
+      itemImgListener: null, //data加一个变量对象
+    };
+  }
+
+
+mounted() {
+
+  1.原本的mounted
+  this.$bus.$on("itemImageLoad", () => {
+      // this.$refs.scroll.refresh();这样refresh太过频繁刷新
+      refresh();
+    });
+  2.提取
+    this.itemImgListener = () => {
+      refresh();
+    };
+    this.$bus.$on("itemImageLoad", this.itemImgListener);
+}
+这样就完成了Home首页的取消全局监听,这里是在deactiveted函数做的取消监听，在离开Home组件时做的取消监听
+没有离开Home组件还是能实现对图片监听的
+
+然后，在Detail.vue组件也需要监听是否图片加载完,也需要取消全局监听，但是因为详情页没有做缓存(之前在App.vue的keep-alive使用了exclude="Detail")，
+所以没有deactivated这个生命周期函数,想要在离开detail组件的时候取消全局监听，就要在destoryed函数做
+
+data() {
+    return {
+      itemImgListener: null, //data加一个变量对象
+    };
+  }
+
+mounted() {
+    const refresh = debounce(this.$refs.scroll.refresh, 0.01);
+
+    this.itemImgListener = () => {
+      refresh();
+    };
+    this.$bus.$on("itemImageLoad", this.itemImgListener);
+}
+destory(){
+  //2.取消全局事件的监听
+    this.$bus.$off("itemImageLoad", this.itemImgListener); 
+}
+这样就完成了detail组件的监听和取消全局监听,详情页也能加载完一张图片就刷新一次了，解决了better-scroll不能往下拉的bug
+但是可以发现Home组件和Detail组件都有一段一样的代码,data里面的itemImgListener对象和mouted函数
+此时可以mixin混入技术，新建文件mixin.js，混入不能放methods的方法，拿回来的时候会覆盖，生命周期函数不会，会合并
+export const itemListenerMixin = {
+
+  data() {
+    return {
+      itemImgListener: null, //data加一个变量对象
+    };
+  }
+
+  mounted(){
+    const refresh = debounce(this.$refs.scroll.refresh, 0.01); //这里用到防抖，注意要导入防抖的文件
+
+    this.itemImgListener = () => {
+      refresh();
+    };
+    this.$bus.$on("itemImageLoad", this.itemImgListener);
+  }
+}
+把重复代码放里面，Home组件和Detail组件导入这个文件，然后在Vue实例添加属性mixins:[itemListenerMixin]，
+这样重复代码就混入进去了。注意这个是属性，与data，created,methods同级别
+
+也许有同学觉得，重复代码用继承，注意继承，ES6继承的是类里面的重复代码，而这里组件是一个对象
+
+mixin的使用 Vue文档介绍
+https://cn.vuejs.org/v2/guide/mixins.html#%E5%9F%BA%E7%A1%80
+
+
+三十二：详情页标题和内容的联动效果
+第一部分：点击标题，滚动到对应的主体
+1.DetailNavBar.vue监听点击发射事件
+  methods: {
+    titleClick(index) {
+        this.$emit("titleClick", index);
+    }
+  }
+2.Detail.vue监听事件，调用函数
+ <detail-nav-bar @titleClick="titleClick"></detail-nav-bar>
+
+ methods: {
+    titleClick(index) {
+      console.log(index);
+      this.$refs.scroll.scrollTo(0, -this.themeTopYs[index], 300); 
+    }
+ }
+
+  data() {
+    return {
+      themeTopYs: [],
+    };
+  },
+
+mounted(){
+   //拿到商品，参数，评论，推荐的offsetTop
+    this.themeTopYs.push(0);
+    this.themeTopYs.push(this.$refs.params.$el.offsetTop);
+    this.themeTopYs.push(this.$refs.comment.$el.offsetTop);
+    this.themeTopYs.push(this.$refs.recommend.$el.offsetTop);
+    console.log(this.themeTopYs); //(4) [0, undefined, undefined, 505, __ob__: Observer]
+}
+3.因为在created请求数据是异步，不一定拿到数据了，而this.$refs.params.$el拿到组件的根标签，里面有detail的请求数据
+<div v-if="Object.keys(commentInfo).length !== 0" class="comment-info"> ，请求数据是异步操作，数据不一定请求过来了，没有数据就不会渲染，所以undefined
+所以应该把这段代码放在updated生命周期函数，等数据更新完的时候调用，但是数组长度会有问题，因为组件每次数据更新就会执行一次updated,那就会不停往数组的push
+所以还需要在代码最前面加this.themeTopYs=[],这样每次调用updated时，数组长度都是0
+        this.themeTopYs = [];
+        this.themeTopYs.push(0);
+        this.themeTopYs.push(this.$refs.params.$el.offsetTop - 44);//减去导航栏的高度
+        this.themeTopYs.push(this.$refs.comment.$el.offsetTop - 44);
+        this.themeTopYs.push(this.$refs.recommend.$el.offsetTop - 44);
+        console.log(this.themeTopYs);
+
+4.在created写不一定有值，因为还没拿到数据，可以在created的getDetail请求数据函数里的then回调函数里面写，等拿到数据赋值保存之后，就可以把代码放进去了
+ 为什么放在getDetail，有两个数据请求函数呀？因为数组是中间两个为undefiend,最后一个能拿到值
+ getDetail(this.iid).then((res) => {
+        //1.一系列赋值操作
+
+        //2.
+        this.themeTopYs = [];
+        this.themeTopYs.push(0);
+        this.themeTopYs.push(this.$refs.params.$el.offsetTop - 44);//减去导航栏的高度
+        this.themeTopYs.push(this.$refs.comment.$el.offsetTop - 44);
+        this.themeTopYs.push(this.$refs.recommend.$el.offsetTop - 44);
+        console.log(this.themeTopYs);
+
+5.但是还是;[0, undefined, undefined, 505, __ob__: Observer],虽然DetailParamInfo和DetailCommentInfo已经铜鼓oprops拿到数据了
+但是还没有渲染完成，这也是一个异步操作，所以需要加$nextTick,当数据更新了，在dom中渲染后，自动执行该函数，
+this.$nextTick(() => {
+        //这个$nextTick根据最新的数据，对应的DOM是已经被渲染出来了,就执行一次
+        this.themeTopYs = [];
+        this.themeTopYs.push(0);
+        this.themeTopYs.push(this.$refs.params.$el.offsetTop - 44);//减去导航栏的高度
+        this.themeTopYs.push(this.$refs.comment.$el.offsetTop - 44);
+        this.themeTopYs.push(this.$refs.recommend.$el.offsetTop - 44);
+        console.log(this.themeTopYs);
+      });
+
+
+那可以在mounted用这个nextTick吗：不可以，created的请求数据函数的then回调函数拿到数据不代表mounted拿到数据，可能先执行mounted在执行请求数据函数的then回调函数
+
+mounted：执行到这个钩子的时候，就表示Vue实例已经初始化完成了。此时组件脱离了创建阶段，进入到了运行阶段。 
+el已经被挂载上去了，可以操作页面上的DOM节点，最早可以在和这个阶段中进行。vue实例挂载完成，data.message成功渲染
+这里的data是vue实例的属性，不是请求回来的数据,能搞作dom，不代表dom上面有数据了，当然可以放在updated
+
+6.此时就能拿到数据了,div能够被渲染了
+<div v-if="Object.keys(commentInfo).length !== 0" class="comment-info">
+也使用nextTick等DOM渲染一次再执行获取位置了，能拿到位置信息了[0, 8170, 9450, 9665, __ob__: Observer]
+但是上面仅仅是把dom渲染完成了，图片还没有加载完成，目前获取的offsetTop是不包含图片的
+那为什么之前可以正常跳动，这是因为之前图片缓存下来了，位置信息正确。
+但是如果离开组件再回来，缓存的图片就会不见，重新加载图片，图片如果没有加载完,拿到的offsetTop就不是准确的，
+计算出来的高度确定下来了，等图片加载完，再使用跳转就出现跳的位置不对的问题
+
+解决方法：把下面代码放到监听
+ methods: {
+    imageLoad() {
+        this.themeTopYs = [];
+        this.themeTopYs.push(0);
+        this.themeTopYs.push(this.$refs.params.$el.offsetTop - 44);
+        this.themeTopYs.push(this.$refs.comment.$el.offsetTop - 44);
+        this.themeTopYs.push(this.$refs.recommend.$el.offsetTop - 44);
+        console.log(this.themeTopYs);
+    }
+ }
+但是执行太过频繁，使用防抖
+ data() {
+    return {
+      getThemeTopY: null,
+    };
+  },
+
+  created() {
+    //4.给getThemeTopY赋值
+    this.getThemeTopY = debounce(() => {    
+      this.themeTopYs = [];
+      this.themeTopYs.push(0);
+      this.themeTopYs.push(this.$refs.params.$el.offsetTop);
+      this.themeTopYs.push(this.$refs.comment.$el.offsetTop);
+      this.themeTopYs.push(this.$refs.recommend.$el.offsetTop);
+      console.log(this.themeTopYs);
+    }, 100);
+  }
+
+ methods: {
+    imageLoad() {
+        this.getThemeTopY()   //这样保存getThemeTopY，下一次调用还是上一次的值，不用特意弄个函数形成闭包了吧
+    }
+ }
+总结：在哪里才能获取到正确的offsetTopm 
+1.created肯定不行,压根不能获取元素 
+2.mounted也不行,数据还没有获取到
+3.获取到数据的回调中也不行,DOM还没有渲染完 
+4.$nextTick也不行,因为图片的高度没有被计算在内
+5.在图片加载完成后,获取的高度才是正确
+
+
+第二部分：滚动内容显示对应主体
+1.监听滚动位置，scroll组件有发出一个事件
+
+    //监听滚动的位置,必须有probeType才起效
+    if (this.probeType === 2 || this.probeType === 3)
+      this.scroll.on("scroll", (position) => {
+        //   console.log("position");
+        this.$emit("scroll", position);
+      });
+2.所以在Detail监听事件，调用函数
+  <scroll class="content" ref="scroll" :probe-type="3" @scroll="contentScroll">
+
+    methods: {
+      contentScroll(position) {
+         //1.获取y值,position.y拿到的是负值
+          const positionY = -position.y;
+      
+          let length = this.themeTopYs.length;
+          for (let i = 0; i < length; i++) {
+              if (this.currentIndex !== i && ((i < length - 1 && positionY >= this.themeTopYs[i] && positionY < this.themeTopYs[i + 1]) || (i === length - 1 && positionY >= this.themeTopYs[i]))){
+                this.currentIndex = i;
+                console.log(this.currentIndex);
+                this.$refs.nav.currentIndex = this.currentIndex;
+                ;//把currentIndex传给DetailNavBar.vue,它里面有循环遍历给每个div动态绑定class,:class="{active:currentIndex===index}",index是遍历循环的时候就已经给了每个div的，分别判断等于谁，谁就变红
+                }
+          }
+      }
+    }
+
+positionY和主题中值进行对比，之前已经取到了主体的位置themeTopYs=[0, 16422, 17310, 17503]
+positionY 在0 和 16422之间，index就等于0
+positionY 在16422 和17310之间，index就等于1，
+positionY 在17310 和17503之间，index就等于2，
+positionY 大于17503 ，index就等于3，
+
+只写第一条，i=3时，由于取不到i+1，导致判断为false,就永远拿不到index=3,第二条就是给index=3准备的
+
+加上this.currentIndex !== i是为了避免频繁赋值输出，因为每滚动一次就调用一次函数，就要做一次循环，
+做一次判断，做一次赋值this.currentIndex = i;太过频繁
+这样理解：刚开始this.currentIndex等于0，循环需要i=1,2,3该语句才为真，但是当i=1,2,3的时候后半段又为false
+所以一直没赋值，当滚动到边界时，this.currentIndex等于0，循环需要i=1,2,3该语句才为真，i=1时，后半段判为真，i=2,3为false
+通过this.currentIndex = i;赋值this.currentIndex为1
+this.currentIndex等于1，循环需要0，2，3该语句才为真，但是当i=0,2,3的时候后半段又为false
+所以一直没赋值，当滚动到边界时，this.currentIndex等于1，循环需要i=0,2,3该语句才为真，i=2时，后半段判为真，i=0,3为false
+通过this.currentIndex = i;赋值this.currentIndex为2
+但是这个想法验证，要自己想出这行代码的思路：
+当滚动区域在[0,16422]时,后面的语句在i等于0的时候才为真，为了避免在这个区域滚动一直赋值加上this.currentIndex !== i就使得它不再赋值
+当滚动到临界区域时，后面的语句在i等于1的时候才为真，this.currentIndex !== i使得赋值一次，然后再滚动时，因为后面的语句i=1才为真，就会一直复制，加上this.currentIndex !== i就使得它不再赋值
+...
+
+但是太麻烦了：posiition在this.themeTopYs的数组[0，16422，17310,17503]还要分为两个判断条件，可以手动给这个数组添加一个Number.MAX_VALUE
+这样就不会出现  i=3时，i+1取不到值导致为undefined  的问题了
+(i < length - 1 && positionY >= this.themeTopYs[i] && positionY < this.themeTopYs[i + 1])
+所以可以在前面给themeTopYs赋值的时候加上这句
+this.themeTopYs.push(Number.MAX_VALUE);
+
+//4.给getThemeTopY赋值
+    this.getThemeTopY = debounce(() => {
+      this.themeTopYs = [];
+      this.themeTopYs.push(0);
+      this.themeTopYs.push(this.$refs.params.$el.offsetTop);
+      this.themeTopYs.push(this.$refs.comment.$el.offsetTop);
+      this.themeTopYs.push(this.$refs.recommend.$el.offsetTop);
+      this.themeTopYs.push(Number.MAX_VALUE);
+      console.log(this.themeTopYs);
+    }, 100);
+
+然后判断代码改为   
+    methods: {
+      contentScroll(position) {
+        //1.获取y值,position.y拿到的是负值
+        const positionY = -position.y;
+
+        let length = this.themeTopYs.length;
+        for (let i = 0; i < length - 1; i++) {
+          //length改为length-1,因为数组自己手动增加了一个，后面那个区间不需要判断
+          if (
+              this.currentIndex !== i &&
+              positionY >= this.themeTopYs[i] &&
+              positionY < this.themeTopYs[i + 1]
+          ) {
+            this.currentIndex = i;
+            console.log(this.currentIndex);
+            this.$refs.nav.currentIndex = this.currentIndex;
+          }
+        }
+      }
+    }
+
+两个bug:
+1.详情页刷新,Home重新创建，返回的时候不再是原位置，应该是this.themeTopYs.push(this.$refs.recommend.$el.offsetTop);还没拿到recommend的数据
+2.Home的停留效果失效了，是因为之前只监听轮播图的加载，下面还有两张图片，轮播图比较大
+
+
+三十三：底部工具栏的封装
+Detail导入注册DetailBottomBar.vue,在scroll标签外面使用组件标签，修改组件样式
+
+三十四：backTop的引入，老师这里将的方法是混入，先用自己的方法做方便看懂
+import BackTop from "components/content/backTop/backTop.vue";
+
+<back-top @click.native='backClick' v-show="isShowBackTop"></back-top>
+
+  data() {
+    return {
+        isShowBackTop: false,
+    };
+  },
+  methods:{
+    contentScroll(position) {
+        this.isShowBackTop = -position.y > 1000;
+    },
+    backClick() {
+        this.$refs.scroll.scrollTo(0, 0);
+    },
+  }
+
+三十五：将商品添加购物车
+1.在DetailBottomBar.vue监听'加入购物车',发射事件
+<div class="bar-item shopcart" @click="addShopCart">加入购物车</div>
+methods: {
+    addShopCart() {
+      this.$emit("addShopCart");
+    },
+  },
+2.在Detail.vue监听发射的事件，触发回调函数
+<detail-bottom-bar @addShopCart="addShopCart"></detail-bottom-bar>
+
+3.在回调函数获取购物车需要展示的信息，比如图片，标题，描述，价格，iid，这些数据都是之前获取过的了
+addShopCart() {
+      //1.获取购物车需要展示的信息
+      const product = {};
+      product.image = this.topImages[0];
+      product.title = this.goodsInfo.title;
+      product.desc = this.goodsInfo.desc;
+      product.price = this.goodsInfo.realPrice;
+      product.iid = this.iid;
+
+      //2.将商品添加到购物车
+    },
+4.然后将商品添加到购物车，由于购物车和详情页是两个不相关的组件，所以应该将商品信息放到vuex,购物车组件再从vuex拿数据
+这里没用事件总线，因为购物车未必加载完，会导致拿不到数据
+(1)安装vuex,在store文件夹创建index.js文件
+import Vue from 'vue'
+import Vuex from 'vuex'
+
+//1.安装插件
+Vue.use(Vuex)
+
+//2.创建store对象
+ const store = new Vuex.Store({
+  state: {
+  },
+  mutations: {
+  },
+  actions: {
+  },
+  modules: {
+  }
+})
+
+export default store
+
+(2)在main.js导入store,挂载
+import store from './store'
+new Vue({
+   store,
+})
+
+(3)在Detail.vue提交数据到state需要先commit到mutations
+//Detail.vue
+addShopCart() {
+    //2.将商品添加到购物车
+    this.$store.commit("addCart", product); //修改state的状态都要通过mutation
+},
+
+(4)mutations拿到数据做判断state里面是否已经有该商品信息，如果有数量+1，没有就记录数量为1
+//index.js
+export default new Vuex.Store({
+  state: {
+    cartList: []
+  },
+  mutations: {           //devtools能监听mutations对state的修改
+    addCart(state, payload) {
+      let oldProduct = null;
+
+       法1：
+      for (let item of state.cartList) {   //把state.cartList数组里面的成员的值给item
+        if (item.iid === payload.iid)//判断传进来的对象的iid是否跟数组里面成员的iid相同，相同说明里面已经有这个商品对象了
+          oldProduct = item  //赋值给oldProduct
+      }
+       法2：
+       let oldproduct = state.cartList.find(item=>item.iid===payload.iid)
+
+
+      if (oldProduct) {     //上面如果已经有该商品对象了，就赋值给oldProduct,就添加count属性记录添加的数量
+        oldProduct.count += 1
+      } else {     //如果该数组里面还没有传进来的商品对象，就记录数量为1，然后push进去
+        payload.count = 1 //这里是给每个传进来的payload记录属性，记录数量，因为此时oldProduct为null,没有count
+        state.cartList.push(payload)
+      }
+
+    }
+  },
+
+三十六：vuex代码的重构P213，看了没做
+1.一般mutations专注于一件事，但是上面mutation即做了判断，也修改了state的值，应该把判断放在actions做，actions不仅是做异步的
+2.分离，将actions,mutations等分离成文件，减少index.js代码
+
+
+
+
+三十七：购物车导航栏
+1.导入NavBar，注册，使用组件标签，给样式
+<nav-bar class="nav-bar">
+  <div slot="center">购物车({{$store.state.cartList.length}})</div>
+</nav-bar>
+2.需要注意的是，如果嫌$store.state.cartList.length太长可以做计算属性
+3.以后计算属性如果很多可以像下面的做法
+讲了新的知识点：MapGetters,将计算属性的方法都放在vuex的store文件夹的store对象分离出来的getters.js文件
+//getters.js,记得要挂载在index.js的store对象
+export default {
+  //放两个计算属性进来
+  cartLength(state){
+    retuen state.cartList.length
+  }
+  cartList(state){
+    retuen state.cartList
+  }
+} 
+然后在Cart.vue导入，注意这里是从vuex导入，不是store/index.js
+import { mapGetters } from "vuex";   //mapGetters应该是匹配getters的意思
+
+//用法1：
+computed:{
+  ...mapGetters['cartLength','cartList'] ;//把两个计算属性放进来，Cart.vue就可以使用这个计算属性了
+}
+//用法2：
+computed: {
+     ...mapGetters({
+       Length: "cartLength",  ;//也可以不是用getters.js里面计算属性的名字，自己定义为Length,然后加上后面把相应计算属性的内容,此时Length就相当于cartLength，Cart.vue就可以使用Length这个计算属性了
+     }),
+  },
+
+三十八：购物车商品列表
+1.Cart.vue导入注册使用CartList.vue
+2.CartList.vue遍历给每个li分别得到各自的商品数据
+ <li v-for="item in $store.state.shopList" :key="item">{{item}}</li>
+3.CartList.vue导入Scroll.vue,注册使用，但是还不能滚动，better-scroll滚动需要满足三个条件：层级关系，固定高度
+4.在CartList.vue导入注册使用CartListItem.vue遍历数据，给每个加入购物车的商品对象为一个CartListItem.vue，并动态绑定传输数据到CartListItem.vue
+ <cart-list-item v-for="(item,index) in $store.state.shopList" :key="index" :item-info="item"></cart-list-item>
+5.CartListItem.vue通过props拿到数据,写好html和css
+6.CartListItem.vue导入CheckButton.vue,通过动态绑定传数据给CheckButton.vue
+7.在CheckButton.vue里面的选中按钮是图片来的，选择就显示，不选择就不显示
+但是需求是点击购物车的时候就默认选上了
+<div class="check-button" :class="{check:isChecked}">
+    <img src="~assets/images/cart/tick.svg" alt="">
+</div>
+所以需要在store的index.js给商品对象添加一个checked属性payload.checked = true
+8.需求2：点击导致不显示的选中效果
+可以在CheckButton.vue内部监听点击发射事件，也可以在CartListItem.vue使用的CheckButton组件标签监听，这里后者
+<check-button @click.native="checkClick" :is-checked="itemInfo.checked"></check-button>
+触发函数，取反然后通过上面的动态绑定把修改的值传给CheckButton.vue,然后根据动态绑定的class来决定显不显示
+ methods: {
+    checkClick() {
+      this.itemInfo.checked = !this.itemInfo.checked;
+    },
+  },
+
+
+
+三十九：购物车全选按钮的状态显示
+;思路：如果添加到购物车的商品的checked选中状态有一个为false，全选按钮就不选上
+
+1.全选按钮是在CartBottomBar.vue,全选按钮是CartBottomBar.vue导入的CheckButton，
+  所以在CartBottomBar.vue判断购物车有没有全部选上的时候，需要将结果通过CheckButton的组件标签传给CheckButton，以便按钮显示状态
+;CartBottomBar.vue 
+<check-button :is-checked="isSelectAll"></check-button>   
+
+computed: {
+ isSelectAll() {
+      ;如果购物车没有任何商品时，返回false;下面三种方法都漏掉了这个判断,都要加上这个判断,
+      if (this.$store.state.shopList.length === 0) return false;
+      
+      ;方法1：使用filter:filter是遍历原数组，将返回true的成员组成新的数组
+      return !this.$store.state.shopList.filter((item) => !item.checked).length;
+      ;如果原数组有一个没选上，那么!item.checked就为true,那this.$store.state.shopList.filter((item) => !item.checked).length;就不为0，
+      ;说明一个以上的商品没选上。那么对非0取反就是false
+
+      ;方法2：使用find
+      //return !this.$store.state.shopList.find((item) => !item.checked)
+      
+      ;方法3：普通遍历
+      //   for (let item of this.$store.shopList) {
+      //     if (!item.checked) {
+      //       return false;
+      //     }
+      //   }
+      //   return true;
+    }
+}
+
+四十：购物车全选按钮的点击效果
+思路：如果原来都是选中的，点击一次就全部不选中；如果原来某些选中或都不选中，点击一次就全部选中
+1.在CartBottomBar.vue给全选按钮点击事件
+ <check-button :is-checked="isSelectAll"  @click.native="checkClick"></check-button>
+
+methods: {
+    checkClick() {
+      if (this.isSelectAll) {
+        ;上面isSelectAll计算属性就是用来确定有没有全部选上，全部选上就是true，部分没选上就是false
+        this.$store.state.shopList.forEach((item) => (item.checked = false));
+      } else {
+        this.$store.state.shopList.forEach((item) => (item.checked = true));
+      }
+    },
+  },
+事实上state是不能直接修改的，还需要提交到mutations修改，否则devtools无法追踪数据的变化
+
+
+四十一：Vuex知识补充：
+需求：想要在详情页点击添加到购物车的时候，详情页弹出一个东西告诉你 '添加到购物车成功'
+解决：这样就需要监听'添加到购物车'，之前在detail已经做了
+addShopCart() {
+      //1.获取购物车需要展示的信息
+      const product = {};
+      product.image = this.topImages[0];
+      product.title = this.goods.title;
+      product.desc = this.goods.desc;
+      product.price = this.goods.realPrice;
+      product.iid = this.iid;
+ 
+      //2.将商品添加到购物车  修改state的状态都要通过mutation
+      this.$store.commit("addCart", product); 
+
+      不能在这里写 弹出'添加到购物车成功',并不是说点击了添加到购物车就代表成功了，还要在mutations或actions做很多操作
+      所以需要在给vuex的actions做一个return new Promise返回promise值，然后在外面通过then()回调函数输出'添加到购物车成功'
+      但是只能在actions做这个返回Promise,mutations不行，
+      老师觉得mutations一般专注于做一件事，但是index.js里面mutations又做了判断有做了赋值，就分来为actions和mutations了
+      上面用的是dispatch,我没做,大概这样做：
+      //index.js
+      actions:{
+        addCart(){
+          return new Promise((resolve,reject)=>{
+              if(){
+                ...
+               reslove('111')
+              }else{
+                ...
+                reslove('222')
+              }
+
+          })
+        }
+      }
+
+      //detail.vue
+       this.$store.dispatch("addCart", product).then(res=>{
+         console.log(res)
+       })
+
+另外一个知识点：
+1.如果上面的代码想要使用这样的形式写，
+       this.addCart(product).then(res=>{
+         console.log(res)
+       })  
+2.可以把actions映射到detail里面
+import {mapActions} from 'vuex'
+
+methods：{
+  ...mapActions(['addCart'])
+}
+然后就可以直接调用了，其实这种方法内部还是像之前那样调用的  this.$store.dispatch("addCart", product)
+
+
+  四十二：
+  1.Toast普通的封装方式：弄个组件导入注册使用,默认不显示，在上面的then里面修改为true,就显示，做个定时器1s后改为false就消失
+  2.Toast插件方式的封装
+
+
+  ;(1)main.js
+  import toast from 'components/common/toast/index.js' ;index.js使用export default导出的，所以可以改名字
+  
+  Vue.use(toast)  ;Vue.use本质是执行toast的install方法来安装这个插件的
+  
+
+
+  ;(2)toast文件夹的index.js
+  
+ import Toast from './Toast.vue'
+
+ const obj = {}
+
+ obj.install = function (Vue) {
+    //1.创建组件的构造器
+    const toastContrustor = Vue.extend(Toast)
+    //2.new的方式，根据组件构造器，可以创建出来一个组件对象
+    const toast = new toastContrustor()
+    //3.将组件对象，手动挂在到某一元素上
+    toast.$mount(document.createElement('div'))
+    //4.toast.$el对应的就是div
+    document.body.appendChild(toast.$el)
+
+    Vue.prototype.$toast = toast
+ }
+ export default obj
+  
+  
+
+  ;(3)Toast.vue
+  
+  <div class="toast" v-show="isShow">
+     <div>{{message}}</div>
+  </div>
+  
+  data() {
+      return {
+        message: "",
+        isShow: false,
+      };
+    },
+  
+    methods: {
+      show(message, duration = 2000) {
+        this.isShow = true;
+        this.message = message;
+        setTimeout(() => {
+          this.isShow = false;
+          this.message = "";
+        }, duration);
+      },
+    },
+  
+  ;(4)Detail.vue,这个没做actions所以没有
+       this.$store.dispatch("addCart", product).then(res=>{
+           this.$toast.show("请选择购买的商品",2000);
+         })
+  
+  ;(5)CartBottomBar.vue，这个可以使用toast插件的show方法
+  <div class="calculate" @click="calcClick">去计算：({{checkLength}})</div>
+  
+  methods: {
+      calcClick() {
+      if (!this.$store.state.shopList.find((item) => item.checked)) {
+        this.$toast.show("请选择购买的商品");
+      }
+    },
+
+
+四十三：fastclick:解决移动端300ms延迟，没做
+四十四：图片懒加载
+1.安装：npm install vue-lazyload --save
+2.在main.js 
+  import Vuelazyload from "vue-lazyload"
+  Vue.use(Vuelazyload, {   //可以写第二个参数也可以不写
+  loading: require('./assets/images/common/placeholder.png') //这个是占位图片，图片没加载用这张显示
+  })
+3.GoodsListItem.vue的 :src="showImage" 改为 v-lazy="showImage"
+<img v-lazy="showImage">
