@@ -55,8 +55,7 @@ module.exports = {
         https: false, // https:{type:Boolean}配置前缀
         open: false, //配置自动启动浏览器
         proxy: null,  //设置代理
-    },
-    // publicPath: ''
+    }
 }
 
 // 对于javascript引入：
